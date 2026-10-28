@@ -1,28 +1,27 @@
 ﻿using LibraryManagement.Api.Entities;
 
-namespace LibraryManagement.Api.Endpoints
+namespace LibraryManagement.Api.Endpoints;
+
+public static class CategoriesEndpoints
 {
-    public static class CategoriesEndpoints
+    private static List<Category> _categories =
+    [
+        new Category{ Id = 1, Name = "Biography"},
+        new Category{ Id = 2, Name = "Novel"}
+    ];
+
+    public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
     {
-        private static List<Category> _categories =
-        [
-            new Category{ Id = 1, Name = "Biography"},
-            new Category{ Id = 2, Name = "Novel"}
-        ];
+        var groop = app
+            .MapGroup("/api/categories")
+            .WithTags("Category");
 
-        public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
-        {
-            var groop = app
-                .MapGroup("/api/categories")
-                .WithTags("Category");
+        groop.MapGet("/", GetAll);
+    }
 
-            groop.MapGet("/", GetAll);
-        }
-
-        private static async Task<IResult> GetAll()
-        {
-            var categories = _categories;
-            return Results.Ok(categories);
-        }
+    private static async Task<IResult> GetAll()
+    {
+        var categories = _categories;
+        return Results.Ok(categories);
     }
 }
