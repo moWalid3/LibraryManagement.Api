@@ -96,4 +96,23 @@ public class AuthorsController : ControllerBase
 
         return Ok(existingAuthor);
     }
+
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> Delete(int id)
+    {
+        var authorToBeDeleted = _authors.FirstOrDefault(author => author.Id == id);
+
+        if (authorToBeDeleted is null)
+        {
+            return Problem(
+                detail: $"An author with Id {id} has not been found.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        _authors.Remove(authorToBeDeleted);
+
+        return NoContent();
+    }
 }
