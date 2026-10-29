@@ -13,6 +13,8 @@ public class Program
         builder.Services.AddAuthorization();
 
         builder.Services.AddOpenApi();
+        builder.Services.AddControllers();
+        builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         var app = builder.Build();
 
@@ -28,6 +30,8 @@ public class Program
         app.UseAuthorization();
 
         app.MapCategoryEndpoints();
+        app.MapControllers();
+
         app.Run();
     }
 }
