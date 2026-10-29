@@ -18,11 +18,14 @@ public static class CategoriesEndpoints
             .WithTags("Category");
 
         group.MapGet("/", GetAll);
+
         group.MapGet("/{id:int}", GetById)
-            .WithName("GetCategoryById");
-        //.Produces<Category>(StatusCodes.Status200OK)
-        //.Produces(StatusCodes.Status404NotFound);
-        group.MapPost("/", Create);
+            .WithName("GetCategoryById")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/", Create)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<Ok<List<Category>>> GetAll()
@@ -31,30 +34,41 @@ public static class CategoriesEndpoints
         return TypedResults.Ok(categories);
     }
 
-    private static async Task<Results<Ok<Category>, NotFound>> GetById(int id)
+    private static async Task<Results<Ok<Category>, ProblemHttpResult>> GetById(int id)
     {
         var category = _categories.FirstOrDefault(category => category.Id == id);
 
         if (category is null)
         {
-            return TypedResults.NotFound();
+            return TypedResults.Problem(
+                detail: $"A category with id {id} has not been found",
+                statusCode: StatusCodes.Status404NotFound);
         }
 
         return TypedResults.Ok(category);
     }
 
-    private static async Task<Results<CreatedAtRoute<Category>, Conflict, BadRequest>> Create(Category category)
+    private static async Task<Results<CreatedAtRoute<Category>, ProblemHttpResult>> Create(Category category)
     {
         if (string.IsNullOrWhiteSpace(category.Name))
         {
-            return TypedResults.BadRequest();
+            return TypedResults.Problem(
+                detail: "A category name can not be empty",
+                statusCode: StatusCodes.Status400BadRequest);
         }
 
-        bool categoryExists = _categories.Any(cat => cat.Id == category.Id || cat.Name == category.Name);
-
-        if (categoryExists)
+        if (_categories.Any(currentCategory => currentCategory.Id == category.Id))
         {
-            return TypedResults.Conflict();
+            return TypedResults.Problem(
+                detail: $"A category with id {category.Id} already exists.",
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        if (_categories.Any(currentCategory => currentCategory.Name == category.Name))
+        {
+            return TypedResults.Problem(
+                detail: $"A category with name {category.Name} already exists.",
+                statusCode: StatusCodes.Status409Conflict);
         }
 
         _categories.Add(category);
