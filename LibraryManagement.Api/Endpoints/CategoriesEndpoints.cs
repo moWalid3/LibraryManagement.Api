@@ -18,9 +18,11 @@ public static class CategoriesEndpoints
             .WithTags("Category");
 
         group.MapGet("/", GetAll);
-        group.MapGet("/{id:int}", GetById);
+        group.MapGet("/{id:int}", GetById)
+            .WithName("GetCategoryById");
         //.Produces<Category>(StatusCodes.Status200OK)
         //.Produces(StatusCodes.Status404NotFound);
+        group.MapPost("/", Create);
     }
 
     private static async Task<Ok<List<Category>>> GetAll()
@@ -39,5 +41,24 @@ public static class CategoriesEndpoints
         }
 
         return TypedResults.Ok(category);
+    }
+
+    private static async Task<Results<CreatedAtRoute<Category>, Conflict, BadRequest>> Create(Category category)
+    {
+        if (string.IsNullOrWhiteSpace(category.Name))
+        {
+            return TypedResults.BadRequest();
+        }
+
+        bool categoryExists = _categories.Any(cat => cat.Id == category.Id || cat.Name == category.Name);
+
+        if (categoryExists)
+        {
+            return TypedResults.Conflict();
+        }
+
+        _categories.Add(category);
+
+        return TypedResults.CreatedAtRoute(category, "GetCategoryById", new { id = category.Id });
     }
 }
