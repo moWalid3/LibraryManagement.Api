@@ -13,6 +13,7 @@ public class Program
         builder.Services.AddAuthorization();
 
         builder.Services.AddOpenApi();
+        builder.Services.AddControllers();
 
         var app = builder.Build();
 
@@ -28,6 +29,8 @@ public class Program
         app.UseAuthorization();
 
         app.MapCategoryEndpoints();
+        app.MapControllers();
+
         app.Run();
     }
 }
