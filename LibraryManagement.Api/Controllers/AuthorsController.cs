@@ -65,4 +65,35 @@ public class AuthorsController : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = author.Id }, author);
     }
+
+
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Author>> Update(int id, Author author)
+    {
+        if (string.IsNullOrWhiteSpace(author.FirstName) ||
+            string.IsNullOrWhiteSpace(author.LastName))
+        {
+            return Problem(
+                detail: "Author's first name and last name cannot be empty.",
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var existingAuthor = _authors.FirstOrDefault(author => author.Id == id);
+
+        if (existingAuthor is null)
+        {
+            return Problem(
+                detail: $"An author with Id {id} has not been found.",
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        existingAuthor.FirstName = author.FirstName;
+        existingAuthor.LastName = author.LastName;
+        existingAuthor.YearOfBirth = author.YearOfBirth;
+
+        return Ok(existingAuthor);
+    }
 }
