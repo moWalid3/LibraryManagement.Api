@@ -14,6 +14,7 @@ public class Program
 
         builder.Services.AddOpenApi();
         builder.Services.AddControllers();
+        builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         var app = builder.Build();
 
