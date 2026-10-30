@@ -1,4 +1,6 @@
+using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.Endpoints;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 namespace LibraryManagement.Api;
@@ -15,6 +17,8 @@ public class Program
         builder.Services.AddOpenApi();
         builder.Services.AddControllers();
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
+        builder.Services.AddDbContext<LibraryDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDb")));
 
         var app = builder.Build();
 
