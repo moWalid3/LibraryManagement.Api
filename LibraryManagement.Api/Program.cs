@@ -25,6 +25,9 @@ public class Program
         builder.Services.AddDbContext<LibraryDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDb")));
 
+        builder.Services.AddProblemDetails(); // UseExceptionHandler needs it for returning a proper Problem response
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
         builder.Services.AddScoped<AuthorMapper>();
         builder.Services.AddScoped<CategoryMapper>();
 
@@ -35,6 +38,7 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        app.UseExceptionHandler();
         app.UseHttpsRedirection();
         app.UseMiddleware<RequestTimingMiddleware>();
 
