@@ -4,6 +4,7 @@ using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Endpoints;
 using LibraryManagement.Api.Mapping;
+using LibraryManagement.Api.Middleware;
 using LibraryManagement.Api.Validators.Authors;
 using LibraryManagement.Api.Validators.Categories;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +19,6 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddAuthorization();
-
         builder.Services.AddOpenApi();
         builder.Services.AddControllers();
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
@@ -36,16 +35,15 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        app.UseHttpsRedirection();
+        app.UseMiddleware<RequestTimingMiddleware>();
+
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
             app.MapScalarApiReference();
             await DataSeeder.SeedAsync(app.Services);
         }
-
-        app.UseHttpsRedirection();
-
-        app.UseAuthorization();
 
         app.MapCategoryEndpoints();
         app.MapControllers();
