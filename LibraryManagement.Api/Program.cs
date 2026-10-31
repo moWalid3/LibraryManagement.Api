@@ -1,5 +1,6 @@
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.Endpoints;
+using LibraryManagement.Api.Mapping;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -19,6 +20,8 @@ public class Program
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
         builder.Services.AddDbContext<LibraryDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDb")));
+        builder.Services.AddScoped<AuthorMapper>();
+        builder.Services.AddScoped<CategoryMapper>();
 
         var app = builder.Build();
 

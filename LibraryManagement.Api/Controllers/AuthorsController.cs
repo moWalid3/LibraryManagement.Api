@@ -1,5 +1,6 @@
 ﻿using LibraryManagement.Api.DataAccess;
-using LibraryManagement.Api.Entities;
+using LibraryManagement.Api.DTOs.Authors;
+using LibraryManagement.Api.Mapping;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,66 +11,78 @@ namespace LibraryManagement.Api.Controllers;
 public class AuthorsController : ControllerBase
 {
     private readonly LibraryDbContext _dbContext;
+    private readonly AuthorMapper _mapper;
 
-    public AuthorsController(LibraryDbContext dbContext)
+    public AuthorsController(
+        LibraryDbContext dbContext,
+        AuthorMapper mapper)
     {
         _dbContext = dbContext;
+        _mapper = mapper;
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<Author>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<Author>>> GetAll()
+    [ProducesResponseType(typeof(List<ReadAuthorDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<ReadAuthorDto>>> GetAll()
     {
         var authors = await _dbContext.Authors.ToListAsync();
 
-        return Ok(authors);
+        var readDtos = authors
+            .Select(_mapper.ToReadDto)
+            .ToList();
+
+        return Ok(readDtos);
     }
 
     [HttpGet("{id:int}")]
-    [ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Author>> GetById(int id)
+    public async Task<ActionResult<ReadAuthorDto>> GetById(int id)
     {
         var author = await _dbContext.Authors.FindAsync(id);
 
         if (author is null)
         {
             return Problem(
-                detail: $"An author with id {id} has not been found",
+                detail: $"An author with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
         }
 
-        return Ok(author);
+        return Ok(_mapper.ToReadDto(author));
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(Author), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<Author>> Create(Author author)
+    public async Task<ActionResult<ReadAuthorDto>> Create(CreateAuthorDto createDto)
     {
-        if (string.IsNullOrWhiteSpace(author.FirstName) ||
-           string.IsNullOrWhiteSpace(author.LastName))
+        if (string.IsNullOrWhiteSpace(createDto.FirstName) ||
+           string.IsNullOrWhiteSpace(createDto.LastName))
         {
             return Problem(
                 detail: $"Author's first name and last name cannot be empty.",
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
+        var author = _mapper.ToEntity(createDto);
+
         _dbContext.Authors.Add(author);
         await _dbContext.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = author.Id }, author);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = author.Id },
+            _mapper.ToReadDto(author));
     }
 
-
     [HttpPut("{id:int}")]
-    [ProducesResponseType(typeof(Author), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Author>> Update(int id, Author author)
+    public async Task<ActionResult<ReadAuthorDto>> Update(int id, UpdateAuthorDto updateDto)
     {
-        if (string.IsNullOrWhiteSpace(author.FirstName) ||
-            string.IsNullOrWhiteSpace(author.LastName))
+        if (string.IsNullOrWhiteSpace(updateDto.FirstName) ||
+            string.IsNullOrWhiteSpace(updateDto.LastName))
         {
             return Problem(
                 detail: "Author's first name and last name cannot be empty.",
@@ -85,13 +98,11 @@ public class AuthorsController : ControllerBase
                 statusCode: StatusCodes.Status404NotFound);
         }
 
-        existingAuthor.FirstName = author.FirstName;
-        existingAuthor.LastName = author.LastName;
-        existingAuthor.YearOfBirth = author.YearOfBirth;
+        _mapper.UpdateEntity(updateDto, existingAuthor);
 
         await _dbContext.SaveChangesAsync();
 
-        return Ok(existingAuthor);
+        return Ok(_mapper.ToReadDto(existingAuthor));
     }
 
     [HttpDelete("{id:int}")]

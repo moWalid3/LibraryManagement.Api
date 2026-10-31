@@ -1,5 +1,6 @@
 ﻿using LibraryManagement.Api.DataAccess;
-using LibraryManagement.Api.Entities;
+using LibraryManagement.Api.DTOs.Categories;
+using LibraryManagement.Api.Mapping;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ public static class CategoriesEndpoints
     {
         var group = app
             .MapGroup("/api/categories")
-            .WithTags("Category");
+            .WithTags("Categories");
 
         group.MapGet("/", GetAll);
 
@@ -32,59 +33,74 @@ public static class CategoriesEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
-    private static async Task<Ok<List<Category>>> GetAll(LibraryDbContext dbContext)
+    private static async Task<Ok<List<ReadCategoryDto>>> GetAll(
+        LibraryDbContext dbContext,
+        CategoryMapper mapper)
     {
         var categories = await dbContext.Categories.ToListAsync();
-        return TypedResults.Ok(categories);
+
+        var readDtos = categories
+            .Select(mapper.ToReadDto)
+            .ToList();
+
+        return TypedResults.Ok(readDtos);
     }
 
-    private static async Task<Results<Ok<Category>, ProblemHttpResult>> GetById(
+    private static async Task<Results<Ok<ReadCategoryDto>, ProblemHttpResult>> GetById(
         int id,
-        LibraryDbContext dbContext)
+        LibraryDbContext dbContext,
+        CategoryMapper mapper)
     {
         var category = await dbContext.Categories.FindAsync(id);
 
         if (category is null)
         {
             return TypedResults.Problem(
-                detail: $"A category with id {id} has not been found",
+                detail: $"A category with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
         }
 
-        return TypedResults.Ok(category);
+        return TypedResults.Ok(mapper.ToReadDto(category));
     }
 
-    private static async Task<Results<CreatedAtRoute<Category>, ProblemHttpResult>> Create(
-        Category category,
-        LibraryDbContext dbContext)
+    private static async Task<Results<CreatedAtRoute<ReadCategoryDto>, ProblemHttpResult>> Create(
+        CreateCategoryDto createDto,
+        LibraryDbContext dbContext,
+        CategoryMapper mapper)
     {
-        if (string.IsNullOrWhiteSpace(category.Name))
+        if (string.IsNullOrWhiteSpace(createDto.Name))
         {
             return TypedResults.Problem(
-                detail: "A category name can not be empty",
+                detail: $"A category name cannot be empty.",
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
         if (await dbContext.Categories.AnyAsync(
-            currentCategory => currentCategory.Name == category.Name))
+            existingCategory => existingCategory.Name == createDto.Name))
         {
             return TypedResults.Problem(
-                detail: $"A category with name {category.Name} already exists.",
+                detail: $"A category with Name {createDto.Name} already exists.",
                 statusCode: StatusCodes.Status409Conflict);
         }
+
+        var category = mapper.ToEntity(createDto);
 
         dbContext.Categories.Add(category);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.CreatedAtRoute(category, "GetCategoryById", new { id = category.Id });
+        return TypedResults.CreatedAtRoute(
+            mapper.ToReadDto(category),
+            "GetCategoryById",
+            new { id = category.Id });
     }
 
-    private static async Task<Results<Ok<Category>, ProblemHttpResult>> Update(
+    private static async Task<Results<Ok<ReadCategoryDto>, ProblemHttpResult>> Update(
         int id,
-        Category updatedCategory,
-        LibraryDbContext dbContext)
+        UpdateCategoryDto updateDto,
+        LibraryDbContext dbContext,
+        CategoryMapper mapper)
     {
-        if (string.IsNullOrWhiteSpace(updatedCategory.Name))
+        if (string.IsNullOrWhiteSpace(updateDto.Name))
         {
             return TypedResults.Problem(
                 detail: "Category name cannot be empty.",
@@ -102,17 +118,17 @@ public static class CategoriesEndpoints
 
         if (await dbContext.Categories.AnyAsync(category =>
             category.Id != id &&
-            category.Name == updatedCategory.Name))
+            category.Name == updateDto.Name))
         {
             return TypedResults.Problem(
-                detail: $"A category with name {updatedCategory.Name} already exists.",
+                detail: $"A category with name {updateDto.Name} already exists.",
                 statusCode: StatusCodes.Status409Conflict);
         }
 
-        existingCategory.Name = updatedCategory.Name;
+        mapper.UpdateEntity(updateDto, existingCategory);
         await dbContext.SaveChangesAsync();
 
-        return TypedResults.Ok(existingCategory);
+        return TypedResults.Ok(mapper.ToReadDto(existingCategory));
     }
 
     private static async Task<Results<NoContent, ProblemHttpResult>> Delete(
