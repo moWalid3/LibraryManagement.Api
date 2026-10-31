@@ -1,4 +1,5 @@
-﻿using LibraryManagement.Api.DataAccess;
+﻿using FluentValidation;
+using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.Mapping;
 using Microsoft.AspNetCore.Mvc;
@@ -54,14 +55,14 @@ public class AuthorsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ReadAuthorDto>> Create(CreateAuthorDto createDto)
+    public async Task<ActionResult<ReadAuthorDto>> Create(
+        CreateAuthorDto createDto,
+        IValidator<CreateAuthorDto> validator)
     {
-        if (string.IsNullOrWhiteSpace(createDto.FirstName) ||
-           string.IsNullOrWhiteSpace(createDto.LastName))
+        var validationResult = await validator.ValidateAsync(createDto);
+        if (!validationResult.IsValid)
         {
-            return Problem(
-                detail: $"Author's first name and last name cannot be empty.",
-                statusCode: StatusCodes.Status400BadRequest);
+            return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
         }
 
         var author = _mapper.ToEntity(createDto);
@@ -81,14 +82,6 @@ public class AuthorsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReadAuthorDto>> Update(int id, UpdateAuthorDto updateDto)
     {
-        if (string.IsNullOrWhiteSpace(updateDto.FirstName) ||
-            string.IsNullOrWhiteSpace(updateDto.LastName))
-        {
-            return Problem(
-                detail: "Author's first name and last name cannot be empty.",
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
         var existingAuthor = await _dbContext.Authors.FindAsync(id);
 
         if (existingAuthor is null)
