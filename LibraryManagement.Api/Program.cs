@@ -3,6 +3,7 @@ using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Endpoints;
+using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.Middleware;
 using LibraryManagement.Api.Validators.Authors;
@@ -28,6 +29,7 @@ public class Program
         builder.Services.AddProblemDetails(); // UseExceptionHandler needs it for returning a proper Problem response
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+        builder.Services.AddScoped<LogActionFilter>();
         builder.Services.AddScoped<AuthorMapper>();
         builder.Services.AddScoped<CategoryMapper>();
 
