@@ -34,7 +34,8 @@ public static class CategoriesEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapDelete("/{id:int}", Delete)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private static async Task<Ok<List<ReadCategoryDto>>> GetAll(
@@ -139,6 +140,17 @@ public static class CategoriesEndpoints
             return TypedResults.Problem(
                 detail: $"A category with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
+        }
+
+        var hasBooks = await dbContext.Books.AnyAsync(book => book.CategoryId == id);
+
+        if (hasBooks)
+        {
+            return TypedResults.Problem(
+                detail: $"Cannot delete the category with Id {id}, " +
+                        $"because it has books assigned. " +
+                        $"Please remove or reassign the books first.",
+                statusCode: StatusCodes.Status409Conflict);
         }
 
         dbContext.Categories.Remove(categoryToBeDeleted);

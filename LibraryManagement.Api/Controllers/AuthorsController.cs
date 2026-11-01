@@ -38,11 +38,13 @@ public class AuthorsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ReadAuthorDto>> GetById(int id)
+    public async Task<ActionResult<ReadAuthorDetailDto>> GetById(int id)
     {
-        var author = await _dbContext.Authors.FindAsync(id);
+        var author = await _dbContext.Authors
+            .Include(author => author.Books)
+            .FirstOrDefaultAsync(author => author.Id == id);
 
         if (author is null)
         {
@@ -51,13 +53,13 @@ public class AuthorsController : ControllerBase
                 statusCode: StatusCodes.Status404NotFound);
         }
 
-        return Ok(_mapper.ToReadDto(author));
+        return Ok(_mapper.ToReadDetailDto(author));
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ReadAuthorDto>> Create(
+    public async Task<ActionResult<ReadAuthorDetailDto>> Create(
         CreateAuthorDto createDto,
         IValidator<CreateAuthorDto> validator)
     {
@@ -75,16 +77,18 @@ public class AuthorsController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { id = author.Id },
-            _mapper.ToReadDto(author));
+            _mapper.ToReadDetailDto(author));
     }
 
     [HttpPut("{id:int}")]
-    [ProducesResponseType(typeof(ReadAuthorDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ReadAuthorDto>> Update(int id, UpdateAuthorDto updateDto)
+    public async Task<ActionResult<ReadAuthorDetailDto>> Update(int id, UpdateAuthorDto updateDto)
     {
-        var existingAuthor = await _dbContext.Authors.FindAsync(id);
+        var existingAuthor = await _dbContext.Authors
+            .Include(author => author.Books)
+            .FirstOrDefaultAsync(author => author.Id == id);
 
         if (existingAuthor is null)
         {
@@ -97,21 +101,33 @@ public class AuthorsController : ControllerBase
 
         await _dbContext.SaveChangesAsync();
 
-        return Ok(_mapper.ToReadDto(existingAuthor));
+        return Ok(_mapper.ToReadDetailDto(existingAuthor));
     }
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult> Delete(int id)
     {
-        var authorToBeDeleted = await _dbContext.Authors.FindAsync(id);
+        var authorToBeDeleted = await _dbContext.Authors
+            .Include(author => author.Books)
+            .FirstOrDefaultAsync(author => author.Id == id);
 
         if (authorToBeDeleted is null)
         {
             return Problem(
                 detail: $"An author with Id {id} has not been found.",
                 statusCode: StatusCodes.Status404NotFound);
+        }
+
+        if (authorToBeDeleted.Books.Count != 0)
+        {
+            return Problem(
+                detail: $"Cannot delete the author with Id {id}, " +
+                        $"because they have books assigned. " +
+                        $"Please remove or reassign the books first.",
+                statusCode: StatusCodes.Status409Conflict);
         }
 
         _dbContext.Authors.Remove(authorToBeDeleted);
