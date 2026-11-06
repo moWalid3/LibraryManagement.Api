@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Members;
 using LibraryManagement.Api.DTOs.Users;
@@ -7,6 +8,11 @@ using LibraryManagement.Api.Errors;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace LibraryManagement.Api.Services;
 
@@ -14,13 +20,16 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly LibraryDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IOptions<JwtSettings> _jwtSettings;
 
     public AuthenticationService(
         LibraryDbContext dbContext,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        IOptions<JwtSettings> jwtSettings)
     {
         _dbContext = dbContext;
         _userManager = userManager;
+        _jwtSettings = jwtSettings;
     }
 
     public async Task<ErrorOr<ReadMemberDto>> RegisterMemberAsync(RegisterMemberUserDto registerDto)
@@ -61,6 +70,28 @@ public class AuthenticationService : IAuthenticationService
         return Result.Created;
     }
 
+    public async Task<ErrorOr<string>> LoginAsync(LoginDto loginDto)
+    {
+        var user = await _userManager.FindByEmailAsync(loginDto.Email);
+
+        if (user is null)
+        {
+            return AuthenticationErrors.InvalidEmailOrPassword();
+        }
+
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+
+        if (!isPasswordValid)
+        {
+            return AuthenticationErrors.InvalidEmailOrPassword();
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var role = roles.First();
+
+        return GenerateToken(user, role);
+    }
+
     private async Task<ErrorOr<ApplicationUser>> RegisterUserAsync(
         string email, string password, string role)
     {
@@ -89,5 +120,30 @@ public class AuthenticationService : IAuthenticationService
         await _userManager.AddToRoleAsync(user, role);
 
         return user;
+    }
+
+    private string GenerateToken(ApplicationUser user, string role)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, user.Id),
+            new(JwtRegisteredClaimNames.Email, user.Email!),
+            new(ClaimTypes.Role, role),
+        };
+
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_jwtSettings.Value.Key));
+
+        var credentials = new SigningCredentials(
+            key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _jwtSettings.Value.Issuer,
+            audience: _jwtSettings.Value.Audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.Value.ExpirationMinutes),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

@@ -43,6 +43,7 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<IValidator<RegisterMemberUserDto>, RegisterMemberUserDtoValidator>();
         builder.Services.AddScoped<IValidator<RegisterLibrarianUserDto>, RegisterLibrarianUserDtoValidator>();
+        builder.Services.AddScoped<IValidator<LoginDto>, LoginDtoValidator>();
 
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
