@@ -7,6 +7,8 @@ public class Book
     public int AvailableCopies { get; set; }
     public required int TotalCopies { get; set; }
     public required int CategoryId { get; set; }
+
     public Category? Category { get; set; }
     public ICollection<Author> Authors { get; set; } = [];
+    public ICollection<Loan> Loans { get; set; } = [];
 }
