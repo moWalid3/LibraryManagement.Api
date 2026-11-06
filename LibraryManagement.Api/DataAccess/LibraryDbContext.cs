@@ -36,17 +36,17 @@ public class LibraryDbContext : IdentityDbContext<ApplicationUser>
     {
         IdentityRole memberRole = new()
         {
-            Id = "",
+            Id = "84e26b8f-dbca-486d-94e4-7e7a660d809d",
             Name = Entities.Roles.Member,
             NormalizedName = Entities.Roles.Member.ToUpper(),
-            ConcurrencyStamp = ""
+            ConcurrencyStamp = "0a63ce37-8b31-4984-a979-6492a6074d3f"
         };
         IdentityRole librarianRole = new()
         {
-            Id = "",
+            Id = "4bcb3a23-758c-4c51-8973-af3cd49efbba",
             Name = Entities.Roles.Librarian,
             NormalizedName = Entities.Roles.Librarian.ToUpper(),
-            ConcurrencyStamp = ""
+            ConcurrencyStamp = "7e80cd17-8176-4668-819f-9377010db437"
         };
 
         builder.Entity<IdentityRole>()
