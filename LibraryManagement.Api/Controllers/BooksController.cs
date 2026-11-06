@@ -11,6 +11,7 @@ namespace LibraryManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
+    /*
     private readonly LibraryDbContext _dbContext;
     private readonly BookMapper _mapper;
     public BooksController(LibraryDbContext dbContext, BookMapper mapper)
@@ -191,4 +192,5 @@ public class BooksController : ControllerBase
 
         return NoContent();
     }
+    */
 }

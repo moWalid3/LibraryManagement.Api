@@ -12,9 +12,9 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
 
         builder.Property(book => book.Title).HasMaxLength(200);
 
-        builder.HasOne<Category>()
-            .WithMany()
-            .HasForeignKey(book => book.CategoryId);
+        builder.HasMany(book => book.Loans)
+            .WithOne(loan => loan.Book)
+            .HasForeignKey(loan => loan.BookId);
 
         builder.HasMany<Author>()
             .WithMany();

@@ -13,6 +13,7 @@ namespace LibraryManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthorsController : ControllerBase
 {
+    /*
     private readonly LibraryDbContext _dbContext;
     private readonly AuthorMapper _mapper;
 
@@ -135,4 +136,5 @@ public class AuthorsController : ControllerBase
 
         return NoContent();
     }
+    */
 }

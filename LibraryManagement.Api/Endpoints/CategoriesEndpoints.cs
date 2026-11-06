@@ -11,6 +11,7 @@ namespace LibraryManagement.Api.Endpoints;
 
 public static class CategoriesEndpoints
 {
+    /*
     public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app
@@ -158,4 +159,5 @@ public static class CategoriesEndpoints
 
         return TypedResults.NoContent();
     }
+    */
 }

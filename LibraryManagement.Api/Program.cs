@@ -31,7 +31,7 @@ public class Program
             await DataSeeder.SeedAsync(app.Services);
         }
 
-        app.MapCategoryEndpoints();
+        //app.MapCategoryEndpoints();
         app.MapControllers();
 
         app.Run();

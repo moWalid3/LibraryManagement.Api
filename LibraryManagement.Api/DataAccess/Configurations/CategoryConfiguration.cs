@@ -11,5 +11,9 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.HasKey(category => category.Id);
 
         builder.Property(category => category.Name).HasMaxLength(50);
+
+        builder.HasMany(category => category.Books)
+            .WithOne(book => book.Category)
+            .HasForeignKey(book => book.CategoryId);
     }
 }

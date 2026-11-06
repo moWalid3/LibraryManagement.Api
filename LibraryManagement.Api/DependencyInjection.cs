@@ -3,12 +3,15 @@ using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.DTOs.Categories;
+using LibraryManagement.Api.DTOs.Users;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Filters;
-using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.Middleware;
+using LibraryManagement.Api.Services;
+using LibraryManagement.Api.Services.Contracts;
 using LibraryManagement.Api.Validators.Authors;
 using LibraryManagement.Api.Validators.Categories;
+using LibraryManagement.Api.Validators.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -31,15 +34,15 @@ public static class DependencyInjection
 
     public static WebApplicationBuilder AddApplicationServices(this WebApplicationBuilder builder)
     {
+        builder.Services.AddScoped(typeof(ValidationFilter<>));
         builder.Services.AddScoped<LogActionFilter>();
-
-        builder.Services.AddScoped<AuthorMapper>();
-        builder.Services.AddScoped<CategoryMapper>();
-        builder.Services.AddScoped<BookMapper>();
 
         builder.Services.AddScoped<IValidator<CreateAuthorDto>, CreateAuthorDtoValidator>();
         builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
         builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
+        builder.Services.AddScoped<IValidator<RegisterMemberUserDto>, RegisterMemberUserDtoValidator>();
+
+        builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
         return builder;
     }

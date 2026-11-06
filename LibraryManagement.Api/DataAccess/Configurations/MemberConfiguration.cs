@@ -16,5 +16,9 @@ public class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.HasOne<ApplicationUser>()
             .WithOne()
             .HasForeignKey<Member>(member => member.UserId);
+
+        builder.HasMany(member => member.Loans)
+            .WithOne(loan => loan.Member)
+            .HasForeignKey(loan => loan.MemberId);
     }
 }
