@@ -3,11 +3,13 @@ using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.Endpoints;
+using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Filters;
 using LibraryManagement.Api.Mapping;
 using LibraryManagement.Api.Middleware;
 using LibraryManagement.Api.Validators.Authors;
 using LibraryManagement.Api.Validators.Categories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -25,6 +27,11 @@ public class Program
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
         builder.Services.AddDbContext<LibraryDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("LibraryDb")));
+
+        builder.Services
+            .AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<LibraryDbContext>();
 
         builder.Services.AddProblemDetails(); // UseExceptionHandler needs it for returning a proper Problem response
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
