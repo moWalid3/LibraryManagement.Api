@@ -35,4 +35,22 @@ public class AuthenticationController : ControllerBase
 
         return CreatedAtRoute("GetMemberById", new { result.Value.Id }, result.Value);
     }
+
+    [HttpPost("register-librarian")]
+    [ServiceFilter(typeof(ValidationFilter<RegisterLibrarianUserDto>))]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult> RegisterLibrarian(RegisterLibrarianUserDto registerDto)
+    {
+        var result = await _authenticationService.RegisterLibrarianAsync(registerDto);
+
+        if (result.IsError)
+        {
+            return result.FirstError.ToProblem(this);
+        }
+
+        return Created();
+    }
 }

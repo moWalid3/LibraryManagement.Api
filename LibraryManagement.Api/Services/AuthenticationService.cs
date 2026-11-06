@@ -48,6 +48,19 @@ public class AuthenticationService : IAuthenticationService
         return member.ToReadDto();
     }
 
+    public async Task<ErrorOr<Created>> RegisterLibrarianAsync(RegisterLibrarianUserDto registerDto)
+    {
+        var userRegistrationResult = await RegisterUserAsync(
+            registerDto.Email, registerDto.Password, Roles.Librarian);
+
+        if (userRegistrationResult.IsError)
+        {
+            return userRegistrationResult.FirstError;
+        }
+
+        return Result.Created;
+    }
+
     private async Task<ErrorOr<ApplicationUser>> RegisterUserAsync(
         string email, string password, string role)
     {

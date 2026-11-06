@@ -7,4 +7,5 @@ namespace LibraryManagement.Api.Services.Contracts;
 public interface IAuthenticationService
 {
     Task<ErrorOr<ReadMemberDto>> RegisterMemberAsync(RegisterMemberUserDto registerDto);
+    Task<ErrorOr<Created>> RegisterLibrarianAsync(RegisterLibrarianUserDto registerDto);
 }
