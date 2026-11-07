@@ -2,6 +2,7 @@
 using LibraryManagement.Api.Common;
 using LibraryManagement.Api.DataAccess;
 using LibraryManagement.Api.DTOs.Authors;
+using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.DTOs.Users;
 using LibraryManagement.Api.Entities;
@@ -10,6 +11,7 @@ using LibraryManagement.Api.Middleware;
 using LibraryManagement.Api.Services;
 using LibraryManagement.Api.Services.Contracts;
 using LibraryManagement.Api.Validators.Authors;
+using LibraryManagement.Api.Validators.Books;
 using LibraryManagement.Api.Validators.Categories;
 using LibraryManagement.Api.Validators.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -45,9 +47,12 @@ public static class DependencyInjection
         builder.Services.AddScoped<IValidator<LoginDto>, LoginDtoValidator>();
         builder.Services.AddScoped<IValidator<CreateAuthorDto>, CreateAuthorDtoValidator>();
         builder.Services.AddScoped<IValidator<UpdateAuthorDto>, UpdateAuthorDtoValidator>();
+        builder.Services.AddScoped<IValidator<CreateBookDto>, CreateBookDtoValidator>();
+        builder.Services.AddScoped<IValidator<UpdateBookDto>, UpdateBookDtoValidator>();
 
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddScoped<IAuthorsService, AuthorsService>();
+        builder.Services.AddScoped<IBooksService, BooksService>();
 
         return builder;
     }

@@ -1,6 +1,6 @@
 ﻿namespace LibraryManagement.Api.DTOs.Books;
 
-public class ReadBookDto
+public record ReadBookDto
 {
     public required int Id { get; init; }
     public required string Title { get; init; }
