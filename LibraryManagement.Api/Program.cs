@@ -25,12 +25,12 @@ public class Program
         app.UseAuthorization();
         app.UseMiddleware<RequestTimingMiddleware>();
 
-        if (app.Environment.IsDevelopment())
-        {
-            app.MapOpenApi();
-            app.MapScalarApiReference();
-            await DataSeeder.SeedAsync(app.Services);
-        }
+        //if (app.Environment.IsDevelopment())
+        //{
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+        await DataSeeder.SeedAsync(app.Services);
+        //}
 
         app.MapControllers();
 
