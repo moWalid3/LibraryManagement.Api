@@ -15,4 +15,10 @@ public static class MemberMappings
             IsActive = member.IsActive
         };
     }
+
+    public static void UpdateFromDto(this Member member, UpdateMemberDto dto)
+    {
+        member.FirstName = dto.FirstName;
+        member.LastName = dto.LastName;
+    }
 }

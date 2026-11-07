@@ -5,6 +5,7 @@ using LibraryManagement.Api.DTOs.Authors;
 using LibraryManagement.Api.DTOs.Books;
 using LibraryManagement.Api.DTOs.Categories;
 using LibraryManagement.Api.DTOs.Loans;
+using LibraryManagement.Api.DTOs.Members;
 using LibraryManagement.Api.DTOs.Users;
 using LibraryManagement.Api.Entities;
 using LibraryManagement.Api.Filters;
@@ -15,6 +16,7 @@ using LibraryManagement.Api.Validators.Authors;
 using LibraryManagement.Api.Validators.Books;
 using LibraryManagement.Api.Validators.Categories;
 using LibraryManagement.Api.Validators.Loans;
+using LibraryManagement.Api.Validators.Members;
 using LibraryManagement.Api.Validators.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -51,12 +53,14 @@ public static class DependencyInjection
         builder.Services.AddScoped<IValidator<CreateLoanDto>, CreateLoanDtoValidator>();
         builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
         builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
+        builder.Services.AddScoped<IValidator<UpdateMemberDto>, UpdateMemberDtoValidator>();
 
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddScoped<IAuthorsService, AuthorsService>();
         builder.Services.AddScoped<IBooksService, BooksService>();
         builder.Services.AddScoped<ILoansService, LoansService>();
         builder.Services.AddScoped<ICategoriesService, CategoriesService>();
+        builder.Services.AddScoped<IMembersService, MembersService>();
 
         return builder;
     }
