@@ -1,0 +1,14 @@
+﻿using ErrorOr;
+
+namespace LibraryManagement.Api.Errors;
+
+public static class AuthorErrors
+{
+    public static Error AuthorNotFound(int id) =>
+        Error.NotFound(description: $"An author with Id {id} has not been found.");
+
+    public static Error ConflictAuthorHasBooks(int id) =>
+        Error.Conflict(description: $"Cannot delete the author with Id {id}, " +
+                                    $"because they have books assigned. " +
+                                    $"Please remove or reassign the books first.");
+}

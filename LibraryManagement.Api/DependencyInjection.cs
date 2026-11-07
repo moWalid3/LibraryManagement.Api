@@ -37,15 +37,17 @@ public static class DependencyInjection
         builder.Services.AddScoped(typeof(ValidationFilter<>));
         builder.Services.AddScoped<LogActionFilter>();
 
-        builder.Services.AddScoped<IValidator<CreateAuthorDto>, CreateAuthorDtoValidator>();
         builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
         builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
 
         builder.Services.AddScoped<IValidator<RegisterMemberUserDto>, RegisterMemberUserDtoValidator>();
         builder.Services.AddScoped<IValidator<RegisterLibrarianUserDto>, RegisterLibrarianUserDtoValidator>();
         builder.Services.AddScoped<IValidator<LoginDto>, LoginDtoValidator>();
+        builder.Services.AddScoped<IValidator<CreateAuthorDto>, CreateAuthorDtoValidator>();
+        builder.Services.AddScoped<IValidator<UpdateAuthorDto>, UpdateAuthorDtoValidator>();
 
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<IAuthorsService, AuthorsService>();
 
         return builder;
     }

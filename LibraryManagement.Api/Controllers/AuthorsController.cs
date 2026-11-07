@@ -1,140 +1,119 @@
-﻿using FluentValidation;
-using LibraryManagement.Api.DataAccess;
-using LibraryManagement.Api.DTOs.Authors;
+﻿using LibraryManagement.Api.DTOs.Authors;
+using LibraryManagement.Api.Entities;
+using LibraryManagement.Api.Extensions;
 using LibraryManagement.Api.Filters;
-using LibraryManagement.Api.Mapping;
+using LibraryManagement.Api.RequestParameters;
+using LibraryManagement.Api.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagement.Api.Controllers;
 
+[Authorize(Roles = Roles.Librarian)]
 [ServiceFilter(typeof(LogActionFilter))]
 [ApiController]
 [Route("api/[controller]")]
 public class AuthorsController : ControllerBase
 {
-    /*
-    private readonly LibraryDbContext _dbContext;
-    private readonly AuthorMapper _mapper;
+    private readonly IAuthorsService _authorsService;
 
-    public AuthorsController(
-        LibraryDbContext dbContext,
-        AuthorMapper mapper)
+    public AuthorsController(IAuthorsService authorsService)
     {
-        _dbContext = dbContext;
-        _mapper = mapper;
+        _authorsService = authorsService;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(typeof(List<ReadAuthorDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<ReadAuthorDto>>> GetAll()
+    public async Task<ActionResult<List<ReadAuthorDto>>> GetAll(
+        [FromQuery] PaginationParameters pagination)
     {
-        var authors = await _dbContext.Authors.ToListAsync();
+        var result = await _authorsService.GetAllAsync(pagination);
 
-        var readDtos = authors
-            .Select(_mapper.ToReadDto)
-            .ToList();
+        if (result.IsError)
+        {
+            return result.FirstError.ToProblem(this);
+        }
 
-        return Ok(readDtos);
+        Response.AppendPaginationHeaders(result.Value);
+
+        return Ok(result.Value.Items);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReadAuthorDetailDto>> GetById(int id)
     {
-        var author = await _dbContext.Authors
-            .Include(author => author.Books)
-            .FirstOrDefaultAsync(author => author.Id == id);
+        var result = await _authorsService.GetByIdAsync(id);
 
-        if (author is null)
+        if (result.IsError)
         {
-            return Problem(
-                detail: $"An author with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return result.FirstError.ToProblem(this);
         }
 
-        return Ok(_mapper.ToReadDetailDto(author));
+        return Ok(result.Value);
     }
 
+
     [HttpPost]
+    [ServiceFilter(typeof(ValidationFilter<CreateAuthorDto>))]
     [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ReadAuthorDetailDto>> Create(
-        CreateAuthorDto createDto,
-        IValidator<CreateAuthorDto> validator)
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ReadAuthorDetailDto>> Create(CreateAuthorDto createDto)
     {
-        var validationResult = await validator.ValidateAsync(createDto);
-        if (!validationResult.IsValid)
+        var result = await _authorsService.CreateAsync(createDto);
+
+        if (result.IsError)
         {
-            return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
+            return result.FirstError.ToProblem(this);
         }
-
-        var author = _mapper.ToEntity(createDto);
-
-        _dbContext.Authors.Add(author);
-        await _dbContext.SaveChangesAsync();
 
         return CreatedAtAction(
             nameof(GetById),
-            new { id = author.Id },
-            _mapper.ToReadDetailDto(author));
+            new { id = result.Value.Id },
+            result.Value);
     }
 
     [HttpPut("{id:int}")]
+    [ServiceFilter(typeof(ValidationFilter<UpdateAuthorDto>))]
     [ProducesResponseType(typeof(ReadAuthorDetailDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ReadAuthorDetailDto>> Update(int id, UpdateAuthorDto updateDto)
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ReadAuthorDetailDto>> Update(
+        int id,
+        UpdateAuthorDto updateDto)
     {
-        var existingAuthor = await _dbContext.Authors
-            .Include(author => author.Books)
-            .FirstOrDefaultAsync(author => author.Id == id);
+        var result = await _authorsService.UpdateAsync(id, updateDto);
 
-        if (existingAuthor is null)
+        if (result.IsError)
         {
-            return Problem(
-                detail: $"An author with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return result.FirstError.ToProblem(this);
         }
 
-        _mapper.UpdateEntity(updateDto, existingAuthor);
-
-        await _dbContext.SaveChangesAsync();
-
-        return Ok(_mapper.ToReadDetailDto(existingAuthor));
+        return Ok(result.Value);
     }
 
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult> Delete(int id)
     {
-        var authorToBeDeleted = await _dbContext.Authors
-            .Include(author => author.Books)
-            .FirstOrDefaultAsync(author => author.Id == id);
+        var result = await _authorsService.DeleteAsync(id);
 
-        if (authorToBeDeleted is null)
+        if (result.IsError)
         {
-            return Problem(
-                detail: $"An author with Id {id} has not been found.",
-                statusCode: StatusCodes.Status404NotFound);
+            return result.FirstError.ToProblem(this);
         }
-
-        if (authorToBeDeleted.Books.Count != 0)
-        {
-            return Problem(
-                detail: $"Cannot delete the author with Id {id}, " +
-                        $"because they have books assigned. " +
-                        $"Please remove or reassign the books first.",
-                statusCode: StatusCodes.Status409Conflict);
-        }
-
-        _dbContext.Authors.Remove(authorToBeDeleted);
-        await _dbContext.SaveChangesAsync();
 
         return NoContent();
     }
-    */
 }

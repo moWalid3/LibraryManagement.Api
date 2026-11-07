@@ -9,11 +9,11 @@ public class CreateAuthorDtoValidator : AbstractValidator<CreateAuthorDto>
     {
         RuleFor(dto => dto.FirstName)
             .NotEmpty()
-            .MinimumLength(50);
+            .MaximumLength(50);
 
         RuleFor(dto => dto.LastName)
             .NotEmpty()
-            .MinimumLength(50);
+            .MaximumLength(50);
 
         RuleFor(dto => dto.YearOfBirth)
             .InclusiveBetween(-2000, DateTime.Now.Year)
