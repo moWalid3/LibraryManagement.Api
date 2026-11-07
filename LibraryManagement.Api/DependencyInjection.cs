@@ -41,9 +41,6 @@ public static class DependencyInjection
         builder.Services.AddScoped(typeof(ValidationFilter<>));
         builder.Services.AddScoped<LogActionFilter>();
 
-        builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
-        builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
-
         builder.Services.AddScoped<IValidator<RegisterMemberUserDto>, RegisterMemberUserDtoValidator>();
         builder.Services.AddScoped<IValidator<RegisterLibrarianUserDto>, RegisterLibrarianUserDtoValidator>();
         builder.Services.AddScoped<IValidator<LoginDto>, LoginDtoValidator>();
@@ -52,11 +49,14 @@ public static class DependencyInjection
         builder.Services.AddScoped<IValidator<CreateBookDto>, CreateBookDtoValidator>();
         builder.Services.AddScoped<IValidator<UpdateBookDto>, UpdateBookDtoValidator>();
         builder.Services.AddScoped<IValidator<CreateLoanDto>, CreateLoanDtoValidator>();
+        builder.Services.AddScoped<IValidator<CreateCategoryDto>, CreateCategoryDtoValidator>();
+        builder.Services.AddScoped<IValidator<UpdateCategoryDto>, UpdateCategoryDtoValidator>();
 
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddScoped<IAuthorsService, AuthorsService>();
         builder.Services.AddScoped<IBooksService, BooksService>();
         builder.Services.AddScoped<ILoansService, LoansService>();
+        builder.Services.AddScoped<ICategoriesService, CategoriesService>();
 
         return builder;
     }

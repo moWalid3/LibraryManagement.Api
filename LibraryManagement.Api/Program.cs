@@ -1,5 +1,4 @@
 using LibraryManagement.Api.DataAccess;
-using LibraryManagement.Api.Endpoints;
 using LibraryManagement.Api.Middleware;
 using Scalar.AspNetCore;
 
@@ -31,7 +30,6 @@ public class Program
             await DataSeeder.SeedAsync(app.Services);
         }
 
-        //app.MapCategoryEndpoints();
         app.MapControllers();
 
         app.Run();
